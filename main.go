@@ -21,6 +21,8 @@ type config struct {
 	retryDelay    time.Duration
 	duration      time.Duration
 	rampDelay     time.Duration
+	authAttempts  int
+	authBackoff   time.Duration
 	verbose       bool
 }
 
@@ -38,6 +40,8 @@ func main() {
 	flag.DurationVar(&cfg.retryDelay, "retry-delay", 2*time.Second, "delay before retrying after a failed match")
 	flag.DurationVar(&cfg.duration, "duration", 0, "how long to run; 0 runs until interrupted")
 	flag.DurationVar(&cfg.rampDelay, "ramp-delay", 100*time.Millisecond, "delay between starting each bot")
+	flag.IntVar(&cfg.authAttempts, "auth-attempts", 5, "attempts to authenticate before giving up on a bot")
+	flag.DurationVar(&cfg.authBackoff, "auth-backoff", 250*time.Millisecond, "initial backoff between authentication attempts; doubles and is jittered")
 	flag.BoolVar(&cfg.verbose, "v", false, "log every state sync")
 	flag.Parse()
 
@@ -89,5 +93,6 @@ func main() {
 	logger.Printf("shots sent:     %d", st.shots.Load())
 	logger.Printf("wins:           %d", st.wins.Load())
 	logger.Printf("timeouts:       %d", st.timeouts.Load())
+	logger.Printf("auth retries:   %d", st.authRetries.Load())
 	logger.Printf("errors:         %d", st.errors.Load())
 }

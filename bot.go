@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"math/rand"
 	"sync/atomic"
 	"time"
 
@@ -18,6 +19,9 @@ type stats struct {
 	wins     atomic.Int64
 	timeouts atomic.Int64
 	errors   atomic.Int64
+	// Connect bursts get refused at the TCP layer before Nakama ever sees
+	// them, so retries are tracked separately from outright failures.
+	authRetries atomic.Int64
 }
 
 type bot struct {
@@ -54,7 +58,7 @@ func (b *bot) run(ctx context.Context) {
 		nakama.WithServerKey(b.cfg.serverKey),
 	)
 
-	if err := cl.AuthenticateDevice(ctx, b.deviceID, true, ""); err != nil {
+	if err := b.authenticate(ctx, cl); err != nil {
 		b.stats.errors.Add(1)
 		b.logf("authenticate failed: %v", err)
 		return
@@ -212,4 +216,37 @@ func (b *bot) drain() {
 
 func (b *bot) logf(format string, args ...any) {
 	b.log.Printf("[bot %03d] "+format, append([]any{b.id}, args...)...)
+}
+
+// authenticate retries on failure. A fleet starting at once can exhaust the
+// accept path and get refused at the TCP layer before Nakama sees the request;
+// giving up there would silently shrink the fleet mid-run and make every later
+// number describe the harness rather than the server.
+func (b *bot) authenticate(ctx context.Context, cl *nakama.Client) error {
+	backoff := b.cfg.authBackoff
+
+	for attempt := 1; ; attempt++ {
+		err := cl.AuthenticateDevice(ctx, b.deviceID, true, "")
+		if err == nil {
+			if attempt > 1 {
+				b.logf("authenticated after %d attempts", attempt)
+			}
+			return nil
+		}
+		if attempt >= b.cfg.authAttempts || ctx.Err() != nil {
+			return err
+		}
+
+		b.stats.authRetries.Add(1)
+
+		// Jittered, or every bot refused in the same burst comes back in the
+		// same burst and gets refused again.
+		wait := backoff + time.Duration(rand.Int63n(int64(backoff)))
+		select {
+		case <-ctx.Done():
+			return ctx.Err()
+		case <-time.After(wait):
+		}
+		backoff *= 2
+	}
 }
