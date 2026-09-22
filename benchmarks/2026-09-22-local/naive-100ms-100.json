@@ -1,0 +1,427 @@
+{
+  "label": "naive-100ms-100",
+  "started_at": "2026-09-22T20:34:45.4457981+05:30",
+  "elapsed_sec": 65.001,
+  "config": {
+    "url": "http://127.0.0.1:7350",
+    "bots": 100,
+    "ramp_delay_ms": 100,
+    "shoot_interval_ms": 2500,
+    "duration_sec": 60
+  },
+  "totals": {
+    "matches": 198,
+    "created": 100,
+    "shots": 2102,
+    "wins": 50,
+    "timeouts": 0,
+    "auth_retries": 0,
+    "errors": 27
+  },
+  "peak_connected": 100,
+  "peak_in_match": 100,
+  "ops": [
+    {
+      "op": "auth",
+      "attempts": 100,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 1.77,
+      "p95_ms": 5.44,
+      "p99_ms": 7.09,
+      "max_ms": 7.16
+    },
+    {
+      "op": "account",
+      "attempts": 100,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 1.57,
+      "p95_ms": 2.82,
+      "p99_ms": 3.69,
+      "max_ms": 5.43
+    },
+    {
+      "op": "connect",
+      "attempts": 100,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 1.69,
+      "p95_ms": 2.51,
+      "p99_ms": 3.49,
+      "max_ms": 24.17
+    },
+    {
+      "op": "find_match",
+      "attempts": 225,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 1.17,
+      "p95_ms": 2.36,
+      "p99_ms": 3.28,
+      "max_ms": 3.76
+    },
+    {
+      "op": "join",
+      "attempts": 225,
+      "failures": 27,
+      "failure_rate": 0.12,
+      "p50_ms": 1.1,
+      "p95_ms": 1.66,
+      "p99_ms": 1.88,
+      "max_ms": 2.62
+    },
+    {
+      "op": "shoot_send",
+      "attempts": 2102,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0.34,
+      "max_ms": 0.63
+    },
+    {
+      "op": "shot_to_hit",
+      "attempts": 2092,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 96.98,
+      "p95_ms": 99.42,
+      "p99_ms": 100.22,
+      "max_ms": 101.6
+    }
+  ],
+  "ccu": [
+    {
+      "t": 0,
+      "connected": 0,
+      "in_match": 0
+    },
+    {
+      "t": 1,
+      "connected": 10,
+      "in_match": 10
+    },
+    {
+      "t": 2,
+      "connected": 20,
+      "in_match": 20
+    },
+    {
+      "t": 3,
+      "connected": 30,
+      "in_match": 30
+    },
+    {
+      "t": 4,
+      "connected": 40,
+      "in_match": 40
+    },
+    {
+      "t": 5,
+      "connected": 50,
+      "in_match": 50
+    },
+    {
+      "t": 6,
+      "connected": 60,
+      "in_match": 60
+    },
+    {
+      "t": 7,
+      "connected": 70,
+      "in_match": 70
+    },
+    {
+      "t": 8,
+      "connected": 80,
+      "in_match": 80
+    },
+    {
+      "t": 9,
+      "connected": 90,
+      "in_match": 90
+    },
+    {
+      "t": 10,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 11,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 12,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 13,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 14,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 15,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 16,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 17,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 18,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 19,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 20,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 21,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 22,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 23,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 24,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 25,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 26,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 27,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 28,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 29,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 30,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 31,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 32,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 33,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 34,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 35,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 36,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 37,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 38,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 39,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 40,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 41,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 42,
+      "connected": 100,
+      "in_match": 99
+    },
+    {
+      "t": 43,
+      "connected": 100,
+      "in_match": 96
+    },
+    {
+      "t": 44,
+      "connected": 100,
+      "in_match": 96
+    },
+    {
+      "t": 45,
+      "connected": 100,
+      "in_match": 99
+    },
+    {
+      "t": 46,
+      "connected": 100,
+      "in_match": 99
+    },
+    {
+      "t": 47,
+      "connected": 100,
+      "in_match": 96
+    },
+    {
+      "t": 48,
+      "connected": 100,
+      "in_match": 94
+    },
+    {
+      "t": 49,
+      "connected": 100,
+      "in_match": 95
+    },
+    {
+      "t": 50,
+      "connected": 100,
+      "in_match": 95
+    },
+    {
+      "t": 51,
+      "connected": 100,
+      "in_match": 94
+    },
+    {
+      "t": 52,
+      "connected": 100,
+      "in_match": 96
+    },
+    {
+      "t": 53,
+      "connected": 100,
+      "in_match": 99
+    },
+    {
+      "t": 54,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 55,
+      "connected": 100,
+      "in_match": 97
+    },
+    {
+      "t": 56,
+      "connected": 100,
+      "in_match": 97
+    },
+    {
+      "t": 57,
+      "connected": 100,
+      "in_match": 100
+    },
+    {
+      "t": 58,
+      "connected": 100,
+      "in_match": 99
+    },
+    {
+      "t": 59,
+      "connected": 100,
+      "in_match": 97
+    },
+    {
+      "t": 60,
+      "connected": 100,
+      "in_match": 98
+    },
+    {
+      "t": 61,
+      "connected": 98,
+      "in_match": 98
+    },
+    {
+      "t": 62,
+      "connected": 98,
+      "in_match": 98
+    },
+    {
+      "t": 63,
+      "connected": 98,
+      "in_match": 98
+    },
+    {
+      "t": 64,
+      "connected": 98,
+      "in_match": 98
+    },
+    {
+      "t": 65,
+      "connected": 98,
+      "in_match": 98
+    }
+  ]
+}

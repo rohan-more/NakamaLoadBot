@@ -57,7 +57,21 @@ func main() {
 	flag.DurationVar(&opts.duration, "duration", 60*time.Second, "how long each run lasts")
 	flag.DurationVar(&opts.shootInterval, "shoot-interval", 2500*time.Millisecond, "passed through to the bot")
 	flag.DurationVar(&opts.healthTimeout, "health-timeout", 2*time.Minute, "how long to wait for the server after recreating it")
+	summarize := flag.String("summarize", "", "rewrite summary.md in this results directory from its summary.csv, without running anything")
 	flag.Parse()
+
+	if *summarize != "" {
+		rows, err := readCSV(filepath.Join(*summarize, "summary.csv"))
+		if err != nil {
+			log.Fatal(err)
+		}
+		md := markdown(rows)
+		if err := os.WriteFile(filepath.Join(*summarize, "summary.md"), []byte(md), 0o644); err != nil {
+			log.Fatal(err)
+		}
+		fmt.Print(md)
+		return
+	}
 
 	var err error
 	if opts.modes = splitList(modes); len(opts.modes) == 0 {
@@ -100,8 +114,8 @@ func main() {
 				if err != nil {
 					log.Fatalf("mode=%s ramp=%s bots=%d: %v", mode, ramp, count, err)
 				}
-				log.Printf("        matches=%d created=%d join_fail=%.1f%% orphans=%d errors=%d",
-					r.Matches, r.Created, r.JoinFailRate*100, r.Orphans, r.Errors)
+				log.Printf("        games=%d orphans=%d joins=%d join_fail=%.1f%% errors=%d",
+					r.ServerStarted, r.Orphans, r.Matches, r.JoinFailRate*100, r.Errors)
 				rows = append(rows, r)
 			}
 		}
@@ -345,16 +359,63 @@ func writeCSV(path string, rows []row) error {
 	return w.Error()
 }
 
+// markdown leads with games started, taken from the server log. The bot's
+// own match count is joins, which reads well even when every bot has joined
+// an empty match of its own and no game ever starts.
 func markdown(rows []row) string {
 	var b strings.Builder
-	b.WriteString("| mode | ramp | bots | matches | created | matches/min | join fail | orphans | errors | find_match p95 | join p95 |\n")
-	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
+	b.WriteString("| mode | ramp | bots | games started | orphaned matches | joins | join fail | errors | find_match p95 | join p95 |\n")
+	b.WriteString("| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |\n")
 	for _, r := range rows {
-		fmt.Fprintf(&b, "| %s | %dms | %d | %d | %d | %.1f | %.1f%% | %d | %d | %.2f ms | %.2f ms |\n",
-			r.Mode, r.RampMs, r.Bots, r.Matches, r.Created, r.MatchesPerMin,
-			r.JoinFailRate*100, r.Orphans, r.Errors, r.FindMatchP95, r.JoinP95)
+		fmt.Fprintf(&b, "| %s | %dms | %d | %d | %d | %d | %.1f%% | %d | %.2f ms | %.2f ms |\n",
+			r.Mode, r.RampMs, r.Bots, r.ServerStarted, r.Orphans, r.Matches,
+			r.JoinFailRate*100, r.Errors, r.FindMatchP95, r.JoinP95)
 	}
 	return b.String()
+}
+
+// readCSV loads a summary.csv written by writeCSV.
+func readCSV(path string) ([]row, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	recs, err := csv.NewReader(f).ReadAll()
+	if err != nil {
+		return nil, err
+	}
+	if len(recs) == 0 {
+		return nil, fmt.Errorf("%s is empty", path)
+	}
+	col := make(map[string]int, len(recs[0]))
+	for i, name := range recs[0] {
+		col[name] = i
+	}
+	for _, name := range csvHeader {
+		if _, ok := col[name]; !ok {
+			return nil, fmt.Errorf("%s has no %q column", path, name)
+		}
+	}
+
+	var rows []row
+	for _, rec := range recs[1:] {
+		get := func(name string) string { return rec[col[name]] }
+		atoi := func(name string) int { n, _ := strconv.Atoi(get(name)); return n }
+		toI64 := func(name string) int64 { n, _ := strconv.ParseInt(get(name), 10, 64); return n }
+		toF64 := func(name string) float64 { v, _ := strconv.ParseFloat(get(name), 64); return v }
+		rows = append(rows, row{
+			Mode: get("mode"), RampMs: toI64("ramp_ms"), Bots: atoi("bots"), ElapsedSec: toF64("elapsed_sec"),
+			Matches: toI64("matches"), Created: toI64("created"), MatchesPerMin: toF64("matches_per_min"),
+			Timeouts: toI64("timeouts"), Errors: toI64("errors"), AuthRetries: toI64("auth_retries"),
+			JoinAttempts: toI64("join_attempts"), JoinFailures: toI64("join_failures"), JoinFailRate: toF64("join_fail_rate"),
+			FindMatchP95: toF64("find_match_p95_ms"), JoinP95: toF64("join_p95_ms"), ShotToHitP50: toF64("shot_to_hit_p50_ms"),
+			PeakConnected: toI64("peak_connected"), PeakInMatch: toI64("peak_in_match"),
+			ServerCreated: atoi("server_created"), ServerStarted: atoi("server_started"),
+			ServerFinished: atoi("server_finished"), ServerIdle: atoi("server_idle_closed"), Orphans: atoi("orphans"),
+		})
+	}
+	return rows, nil
 }
 
 func splitList(s string) []string {

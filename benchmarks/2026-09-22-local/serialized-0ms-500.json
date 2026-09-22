@@ -1,0 +1,427 @@
+{
+  "label": "serialized-0ms-500",
+  "started_at": "2026-09-22T20:46:05.2144794+05:30",
+  "elapsed_sec": 65.09,
+  "config": {
+    "url": "http://127.0.0.1:7350",
+    "bots": 500,
+    "ramp_delay_ms": 0,
+    "shoot_interval_ms": 2500,
+    "duration_sec": 60
+  },
+  "totals": {
+    "matches": 985,
+    "created": 463,
+    "shots": 10940,
+    "wins": 234,
+    "timeouts": 0,
+    "auth_retries": 242,
+    "errors": 900
+  },
+  "peak_connected": 500,
+  "peak_in_match": 500,
+  "ops": [
+    {
+      "op": "auth",
+      "attempts": 742,
+      "failures": 242,
+      "failure_rate": 0.3261,
+      "p50_ms": 87.77,
+      "p95_ms": 213,
+      "p99_ms": 249.01,
+      "max_ms": 269.7
+    },
+    {
+      "op": "account",
+      "attempts": 500,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 40.3,
+      "p95_ms": 122.62,
+      "p99_ms": 153,
+      "max_ms": 184.85
+    },
+    {
+      "op": "connect",
+      "attempts": 500,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 38.77,
+      "p95_ms": 55.54,
+      "p99_ms": 63.41,
+      "max_ms": 65.58
+    },
+    {
+      "op": "find_match",
+      "attempts": 1885,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 1.8,
+      "p95_ms": 51.08,
+      "p99_ms": 66.09,
+      "max_ms": 84.61
+    },
+    {
+      "op": "join",
+      "attempts": 1885,
+      "failures": 900,
+      "failure_rate": 0.4775,
+      "p50_ms": 1.08,
+      "p95_ms": 3.14,
+      "p99_ms": 9.67,
+      "max_ms": 27.62
+    },
+    {
+      "op": "shoot_send",
+      "attempts": 10940,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 0,
+      "p95_ms": 0,
+      "p99_ms": 0,
+      "max_ms": 0.78
+    },
+    {
+      "op": "shot_to_hit",
+      "attempts": 10104,
+      "failures": 0,
+      "failure_rate": 0,
+      "p50_ms": 96.88,
+      "p95_ms": 99.26,
+      "p99_ms": 99.88,
+      "max_ms": 101.78
+    }
+  ],
+  "ccu": [
+    {
+      "t": 0,
+      "connected": 0,
+      "in_match": 0
+    },
+    {
+      "t": 1,
+      "connected": 500,
+      "in_match": 95
+    },
+    {
+      "t": 2,
+      "connected": 500,
+      "in_match": 95
+    },
+    {
+      "t": 3,
+      "connected": 500,
+      "in_match": 265
+    },
+    {
+      "t": 4,
+      "connected": 500,
+      "in_match": 265
+    },
+    {
+      "t": 5,
+      "connected": 500,
+      "in_match": 379
+    },
+    {
+      "t": 6,
+      "connected": 500,
+      "in_match": 379
+    },
+    {
+      "t": 7,
+      "connected": 500,
+      "in_match": 444
+    },
+    {
+      "t": 8,
+      "connected": 500,
+      "in_match": 444
+    },
+    {
+      "t": 9,
+      "connected": 500,
+      "in_match": 480
+    },
+    {
+      "t": 10,
+      "connected": 500,
+      "in_match": 480
+    },
+    {
+      "t": 11,
+      "connected": 500,
+      "in_match": 494
+    },
+    {
+      "t": 12,
+      "connected": 500,
+      "in_match": 494
+    },
+    {
+      "t": 13,
+      "connected": 500,
+      "in_match": 499
+    },
+    {
+      "t": 14,
+      "connected": 500,
+      "in_match": 499
+    },
+    {
+      "t": 15,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 16,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 17,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 18,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 19,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 20,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 21,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 22,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 23,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 24,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 25,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 26,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 27,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 28,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 29,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 30,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 31,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 32,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 33,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 34,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 35,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 36,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 37,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 38,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 39,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 40,
+      "connected": 500,
+      "in_match": 500
+    },
+    {
+      "t": 41,
+      "connected": 500,
+      "in_match": 498
+    },
+    {
+      "t": 42,
+      "connected": 500,
+      "in_match": 498
+    },
+    {
+      "t": 43,
+      "connected": 500,
+      "in_match": 498
+    },
+    {
+      "t": 44,
+      "connected": 500,
+      "in_match": 498
+    },
+    {
+      "t": 45,
+      "connected": 500,
+      "in_match": 496
+    },
+    {
+      "t": 46,
+      "connected": 500,
+      "in_match": 497
+    },
+    {
+      "t": 47,
+      "connected": 500,
+      "in_match": 496
+    },
+    {
+      "t": 48,
+      "connected": 500,
+      "in_match": 492
+    },
+    {
+      "t": 49,
+      "connected": 500,
+      "in_match": 495
+    },
+    {
+      "t": 50,
+      "connected": 500,
+      "in_match": 489
+    },
+    {
+      "t": 51,
+      "connected": 500,
+      "in_match": 486
+    },
+    {
+      "t": 52,
+      "connected": 500,
+      "in_match": 489
+    },
+    {
+      "t": 53,
+      "connected": 500,
+      "in_match": 484
+    },
+    {
+      "t": 54,
+      "connected": 500,
+      "in_match": 488
+    },
+    {
+      "t": 55,
+      "connected": 500,
+      "in_match": 494
+    },
+    {
+      "t": 56,
+      "connected": 500,
+      "in_match": 498
+    },
+    {
+      "t": 57,
+      "connected": 500,
+      "in_match": 498
+    },
+    {
+      "t": 58,
+      "connected": 500,
+      "in_match": 497
+    },
+    {
+      "t": 59,
+      "connected": 500,
+      "in_match": 497
+    },
+    {
+      "t": 60,
+      "connected": 500,
+      "in_match": 498
+    },
+    {
+      "t": 61,
+      "connected": 498,
+      "in_match": 498
+    },
+    {
+      "t": 62,
+      "connected": 498,
+      "in_match": 498
+    },
+    {
+      "t": 63,
+      "connected": 498,
+      "in_match": 498
+    },
+    {
+      "t": 64,
+      "connected": 498,
+      "in_match": 498
+    },
+    {
+      "t": 65,
+      "connected": 401,
+      "in_match": 401
+    }
+  ]
+}
