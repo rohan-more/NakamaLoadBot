@@ -14,7 +14,10 @@ import (
 
 // stats is shared across bots, so every field is touched atomically.
 type stats struct {
-	matches  atomic.Int64
+	matches atomic.Int64
+	// Matches this bot created rather than found. Ideal pairing creates one
+	// match per two joins, so anything above half of matches is over-creation.
+	created  atomic.Int64
 	shots    atomic.Int64
 	wins     atomic.Int64
 	timeouts atomic.Int64
@@ -143,6 +146,9 @@ func (b *bot) playMatch(ctx context.Context, cl *nakama.Client, conn *nakama.Con
 		return fmt.Errorf("join %s: %w", found.MatchID, err)
 	}
 	b.stats.matches.Add(1)
+	if found.Created {
+		b.stats.created.Add(1)
+	}
 	b.rec.inMatch.Add(1)
 	defer b.rec.inMatch.Add(-1)
 	b.logf("joined %s (created: %t)", found.MatchID, found.Created)

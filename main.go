@@ -119,6 +119,7 @@ func main() {
 		},
 		Totals: runTotals{
 			Matches:     st.matches.Load(),
+			Created:     st.created.Load(),
 			Shots:       st.shots.Load(),
 			Wins:        st.wins.Load(),
 			Timeouts:    st.timeouts.Load(),
@@ -133,6 +134,7 @@ func main() {
 
 	logger.Printf("--- run complete in %s ---", time.Since(started).Truncate(time.Millisecond))
 	logger.Printf("matches joined: %d", report.Totals.Matches)
+	logger.Printf("  created:      %d", report.Totals.Created)
 	logger.Printf("shots sent:     %d", report.Totals.Shots)
 	logger.Printf("wins:           %d", report.Totals.Wins)
 	logger.Printf("timeouts:       %d", report.Totals.Timeouts)

@@ -185,6 +185,7 @@ func round(v float64, places int) float64 {
 
 type runTotals struct {
 	Matches     int64 `json:"matches"`
+	Created     int64 `json:"created"`
 	Shots       int64 `json:"shots"`
 	Wins        int64 `json:"wins"`
 	Timeouts    int64 `json:"timeouts"`

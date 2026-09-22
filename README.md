@@ -81,6 +81,39 @@ forfeit is not mistaken for a hit.
 `peak connected` counts bots with an open socket, which is not the same as
 bots launched: a bot that cannot authenticate never connects.
 
+`created` counts matches a bot created rather than joined. With two players
+per match, ideal pairing creates one match per two joins, so `created` above
+half of `matches` means callers are making matches instead of finding them.
+
+## Comparing matchmaking modes
+
+The server's `find_match` hardening can be switched down with
+`MATCHMAKING_MODE` (see the server README), and `cmd/ladder` runs the bot
+across a grid of modes, start ramps and bot counts to measure what each fix
+buys.
+
+```bash
+docker run --rm -v "D:/Work/NakamaLoadBot:/src" -w /src -e GOOS=windows -e GOARCH=amd64 golang:1.23 go build -o ladder.exe ./cmd/ladder
+```
+
+```bash
+ladder.exe -server-dir ../NakamaLoadServer -modes naive,serialized,seats -bots 20,100,500 -ramps 100ms,0s -duration 60s
+```
+
+For every run the ladder recreates the nakama container in the requested mode
+and waits until the server has logged that mode, so a run can't silently
+measure the wrong one, and so no run inherits another's matches or seats. It
+then runs the bot, and counts matches created, started, finished and reaped
+from that container's log. `orphans` is matches created that never got a
+second player.
+
+Everything lands in `results/ladder-<timestamp>/`: each run's JSON report, bot
+log and server log, plus `summary.csv` and `summary.md` across all runs. The
+server is left in `seats` mode afterwards.
+
+The first run against a fresh database also creates the bots' accounts, which
+adds to its `auth` latency; later runs reuse them.
+
 ## Keeping in sync with the server
 
 `protocol.go` mirrors the opcodes and RPC ids from the server's
