@@ -3,3 +3,4 @@ loadbot.exe
 *.exe
 *.log
 NakamaLoadBot
+results/

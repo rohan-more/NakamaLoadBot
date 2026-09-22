@@ -23,7 +23,11 @@ type config struct {
 	rampDelay     time.Duration
 	authAttempts  int
 	authBackoff   time.Duration
+	sampleEvery   time.Duration
+	out           string
+	label         string
 	verbose       bool
+	quiet         bool
 }
 
 func main() {
@@ -42,7 +46,11 @@ func main() {
 	flag.DurationVar(&cfg.rampDelay, "ramp-delay", 100*time.Millisecond, "delay between starting each bot")
 	flag.IntVar(&cfg.authAttempts, "auth-attempts", 5, "attempts to authenticate before giving up on a bot")
 	flag.DurationVar(&cfg.authBackoff, "auth-backoff", 250*time.Millisecond, "initial backoff between authentication attempts; doubles and is jittered")
+	flag.DurationVar(&cfg.sampleEvery, "sample-every", time.Second, "how often to sample connected and in-match bots")
+	flag.StringVar(&cfg.out, "out", "", "write a JSON report of the run to this path")
+	flag.StringVar(&cfg.label, "label", "", "free-form label stored in the JSON report, to tell runs apart")
 	flag.BoolVar(&cfg.verbose, "v", false, "log every state sync")
+	flag.BoolVar(&cfg.quiet, "quiet", false, "suppress per-bot logging and print only the summary")
 	flag.Parse()
 
 	if cfg.bots < 1 {
@@ -63,6 +71,14 @@ func main() {
 	started := time.Now()
 
 	var st stats
+	rec := newRecorder()
+
+	// Sampling outlives the bots' ctx only until they have all returned, so
+	// the series covers the ramp down as well as the run.
+	sampleCtx, stopSampling := context.WithCancel(context.Background())
+	sampled := make(chan struct{})
+	go rec.sampleCCU(sampleCtx, started, cfg.sampleEvery, sampled)
+
 	var wg sync.WaitGroup
 
 	for i := 1; i <= cfg.bots; i++ {
@@ -77,7 +93,7 @@ func main() {
 			break
 		}
 
-		b := newBot(i, cfg, &st, logger)
+		b := newBot(i, cfg, &st, rec, logger)
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -86,13 +102,48 @@ func main() {
 	}
 
 	wg.Wait()
+	stopSampling()
+	<-sampled
 
-	elapsed := time.Since(started).Truncate(time.Millisecond)
-	logger.Printf("--- run complete in %s ---", elapsed)
-	logger.Printf("matches joined: %d", st.matches.Load())
-	logger.Printf("shots sent:     %d", st.shots.Load())
-	logger.Printf("wins:           %d", st.wins.Load())
-	logger.Printf("timeouts:       %d", st.timeouts.Load())
-	logger.Printf("auth retries:   %d", st.authRetries.Load())
-	logger.Printf("errors:         %d", st.errors.Load())
+	series, peakConnected, peakInMatch := rec.ccuSeries()
+	report := runReport{
+		Label:      cfg.label,
+		StartedAt:  started,
+		ElapsedSec: round(time.Since(started).Seconds(), 3),
+		Config: runConfig{
+			URL:             cfg.url,
+			Bots:            cfg.bots,
+			RampDelayMs:     cfg.rampDelay.Milliseconds(),
+			ShootIntervalMs: cfg.shootInterval.Milliseconds(),
+			DurationSec:     int64(cfg.duration.Seconds()),
+		},
+		Totals: runTotals{
+			Matches:     st.matches.Load(),
+			Shots:       st.shots.Load(),
+			Wins:        st.wins.Load(),
+			Timeouts:    st.timeouts.Load(),
+			AuthRetries: st.authRetries.Load(),
+			Errors:      st.errors.Load(),
+		},
+		PeakConnected: peakConnected,
+		PeakInMatch:   peakInMatch,
+		Ops:           rec.opReports(),
+		CCU:           series,
+	}
+
+	logger.Printf("--- run complete in %s ---", time.Since(started).Truncate(time.Millisecond))
+	logger.Printf("matches joined: %d", report.Totals.Matches)
+	logger.Printf("shots sent:     %d", report.Totals.Shots)
+	logger.Printf("wins:           %d", report.Totals.Wins)
+	logger.Printf("timeouts:       %d", report.Totals.Timeouts)
+	logger.Printf("auth retries:   %d", report.Totals.AuthRetries)
+	logger.Printf("errors:         %d", report.Totals.Errors)
+	report.printTable(os.Stdout)
+
+	if cfg.out != "" {
+		if err := report.writeJSON(cfg.out); err != nil {
+			logger.Fatalf("write report: %v", err)
+		}
+		logger.Printf("report written to %s", cfg.out)
+	}
 }

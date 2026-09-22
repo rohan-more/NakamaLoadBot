@@ -29,6 +29,7 @@ type bot struct {
 	deviceID string
 	cfg      config
 	stats    *stats
+	rec      *recorder
 	log      *log.Logger
 
 	// Resolved after authenticating; used to tell our own wins apart.
@@ -40,12 +41,20 @@ type bot struct {
 	data chan *nakama.MatchDataMsg
 }
 
-func newBot(id int, cfg config, st *stats, logger *log.Logger) *bot {
+// matchTrack is per-match state used to attribute shot round trips.
+type matchTrack struct {
+	started   bool
+	oppHealth int       // -1 until the first state sync
+	shotAt    time.Time // latest shot awaiting a hit, zero if none
+}
+
+func newBot(id int, cfg config, st *stats, rec *recorder, logger *log.Logger) *bot {
 	return &bot{
 		id:       id,
 		deviceID: fmt.Sprintf("%s-%04d", cfg.devicePrefix, id),
 		cfg:      cfg,
 		stats:    st,
+		rec:      rec,
 		log:      logger,
 		data:     make(chan *nakama.MatchDataMsg, 64),
 	}
@@ -66,7 +75,9 @@ func (b *bot) run(ctx context.Context) {
 
 	// The server renames accounts in an after-authenticate hook, so read the
 	// account back rather than trusting the name on the session.
+	start := time.Now()
 	account, err := cl.Account(ctx)
+	b.rec.observe(ctx, opAccount, start, err)
 	if err != nil {
 		b.stats.errors.Add(1)
 		b.logf("account lookup failed: %v", err)
@@ -74,12 +85,16 @@ func (b *bot) run(ctx context.Context) {
 	}
 	b.userID, b.username = account.User.Id, account.User.Username
 
+	start = time.Now()
 	conn, err := cl.NewConn(ctx, nakama.WithConnFormat("json"))
+	b.rec.observe(ctx, opConnect, start, err)
 	if err != nil {
 		b.stats.errors.Add(1)
 		b.logf("socket connect failed: %v", err)
 		return
 	}
+	b.rec.connected.Add(1)
+	defer b.rec.connected.Add(-1)
 	defer conn.Close()
 
 	// Set once for the lifetime of the connection rather than per match, so
@@ -110,18 +125,26 @@ func (b *bot) run(ctx context.Context) {
 }
 
 func (b *bot) playMatch(ctx context.Context, cl *nakama.Client, conn *nakama.Conn) error {
+	start := time.Now()
 	var found findMatchResponse
-	if err := nakama.Rpc(rpcFindMatch, nil, &found).Do(ctx, cl); err != nil {
+	err := nakama.Rpc(rpcFindMatch, nil, &found).Do(ctx, cl)
+	b.rec.observe(ctx, opFindMatch, start, err)
+	if err != nil {
 		return fmt.Errorf("find_match: %w", err)
 	}
 
 	// Drop anything left over from the previous match before joining.
 	b.drain()
 
-	if _, err := conn.MatchJoin(ctx, found.MatchID, nil); err != nil {
+	start = time.Now()
+	_, err = conn.MatchJoin(ctx, found.MatchID, nil)
+	b.rec.observe(ctx, opJoin, start, err)
+	if err != nil {
 		return fmt.Errorf("join %s: %w", found.MatchID, err)
 	}
 	b.stats.matches.Add(1)
+	b.rec.inMatch.Add(1)
+	defer b.rec.inMatch.Add(-1)
 	b.logf("joined %s (created: %t)", found.MatchID, found.Created)
 
 	defer func() {
@@ -141,6 +164,8 @@ func (b *bot) playMatch(ctx context.Context, cl *nakama.Client, conn *nakama.Con
 	deadline := time.NewTimer(b.cfg.matchTimeout)
 	defer deadline.Stop()
 
+	track := matchTrack{oppHealth: -1}
+
 	for {
 		select {
 		case <-ctx.Done():
@@ -152,13 +177,21 @@ func (b *bot) playMatch(ctx context.Context, cl *nakama.Client, conn *nakama.Con
 			return nil
 
 		case <-shoot.C:
-			if err := conn.MatchDataSend(ctx, found.MatchID, opCodeShoot, []byte("{}"), true); err != nil {
+			sent := time.Now()
+			err := conn.MatchDataSend(ctx, found.MatchID, opCodeShoot, []byte("{}"), true)
+			b.rec.observe(ctx, opShoot, sent, err)
+			if err != nil {
 				return fmt.Errorf("shoot: %w", err)
 			}
 			b.stats.shots.Add(1)
+			// Shots before the match starts are ignored server side, so they
+			// can never produce a hit to time.
+			if track.started {
+				track.shotAt = sent
+			}
 
 		case msg := <-b.data:
-			done, err := b.handle(msg)
+			done, err := b.handle(msg, &track)
 			if err != nil {
 				return err
 			}
@@ -170,18 +203,32 @@ func (b *bot) playMatch(ctx context.Context, cl *nakama.Client, conn *nakama.Con
 }
 
 // handle reports whether the match has finished.
-func (b *bot) handle(msg *nakama.MatchDataMsg) (bool, error) {
+func (b *bot) handle(msg *nakama.MatchDataMsg, track *matchTrack) (bool, error) {
 	switch msg.OpCode {
 	case opCodeStateSync:
-		if !b.cfg.verbose {
-			return false, nil
-		}
 		var state matchStateMsg
 		if err := json.Unmarshal(msg.Data, &state); err != nil {
 			return false, fmt.Errorf("decode state sync: %w", err)
 		}
+		track.started = state.Started
+
 		for _, p := range state.Players {
-			b.logf("  %s: %d HP", p.Username, p.Health)
+			if b.cfg.verbose {
+				b.logf("  %s: %d HP", p.Username, p.Health)
+			}
+			if p.UserID == b.userID {
+				continue
+			}
+			// With two players only our shots can lower the opponent's health,
+			// so a drop closes the round trip for our latest shot. A single hit
+			// deals at most 10, which keeps a forfeit (health set straight to
+			// zero) from being mistaken for one.
+			drop := track.oppHealth - p.Health
+			if track.oppHealth >= 0 && drop >= 1 && drop <= 10 && !track.shotAt.IsZero() {
+				b.rec.sample(opShotToHit, time.Since(track.shotAt))
+				track.shotAt = time.Time{}
+			}
+			track.oppHealth = p.Health
 		}
 
 	case opCodeMatchOver:
@@ -215,6 +262,9 @@ func (b *bot) drain() {
 }
 
 func (b *bot) logf(format string, args ...any) {
+	if b.cfg.quiet {
+		return
+	}
 	b.log.Printf("[bot %03d] "+format, append([]any{b.id}, args...)...)
 }
 
@@ -226,7 +276,9 @@ func (b *bot) authenticate(ctx context.Context, cl *nakama.Client) error {
 	backoff := b.cfg.authBackoff
 
 	for attempt := 1; ; attempt++ {
+		start := time.Now()
 		err := cl.AuthenticateDevice(ctx, b.deviceID, true, "")
+		b.rec.observe(ctx, opAuth, start, err)
 		if err == nil {
 			if attempt > 1 {
 				b.logf("authenticated after %d attempts", attempt)
